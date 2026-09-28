@@ -1,14 +1,16 @@
--- Khởi tạo giao diện menu tối ưu
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local ToggleButton = Instance.new("TextButton")
-local StatusLabel = Instance.new("TextLabel")
+-- Kiểm tra và xóa menu cũ nếu có (tránh lỗi đúp giao diện)
+local CoreGui = game:GetService("CoreGui")
+if CoreGui:FindFirstChild("KingLegacy_AutoHop") then
+    CoreGui.KingLegacy_AutoHop:Destroy()
+end
 
-ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+-- Khởi tạo giao diện menu an toàn tuyệt đối
+local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KingLegacy_AutoHop"
+ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
+local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.Position = UDim2.new(0.5, -100, 0.4, -85)
@@ -16,6 +18,7 @@ MainFrame.Size = UDim2.new(0, 200, 0, 140)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
+local Title = Instance.new("TextLabel")
 Title.Parent = MainFrame
 Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 Title.Size = UDim2.new(1, 0, 0, 35)
@@ -24,6 +27,7 @@ Title.Text = "King Legacy Auto Hop"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 
+local ToggleButton = Instance.new("TextButton")
 ToggleButton.Parent = MainFrame
 ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
 ToggleButton.Position = UDim2.new(0.1, 0, 0.3, 0)
@@ -33,6 +37,7 @@ ToggleButton.Text = "Trạng thái: TẮT"
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.TextSize = 15
 
+local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Parent = MainFrame
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Position = UDim2.new(0.1, 0, 0.75, 0)
@@ -50,7 +55,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 
--- Hàm dịch chuyển mượt mà tới mục tiêu
+-- Hàm bay mượt mà đến mục tiêu
 local function TweenTo(targetPosition)
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
@@ -63,12 +68,11 @@ local function TweenTo(targetPosition)
     
     local tweenInfo = TweenInfo.new(timeToTravel, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPosition + Vector3.new(0, 5, 0))})
-    
     tween:Play()
     task.wait(timeToTravel)
 end
 
--- Hàm đổi Server thông minh
+-- Hàm đổi server
 local function HopServer()
     StatusLabel.Text = "Đang đổi server..."
     local success, serverList = pcall(function()
@@ -86,19 +90,17 @@ local function HopServer()
     end
 end
 
--- Hàm tìm kiếm rương hoặc boss
+-- Hàm quét rương hoặc boss
 local function FindAndCollectTarget()
     local foundTarget = false
-    
     for _, obj in ipairs(workspace:GetDescendants()) do
         if not _G.AutoHopRunning then break end
         
         local name = obj.Name:lower()
-        -- Mở rộng từ khóa tìm kiếm (chest, rương, seaking, hydra)
-        if name:find("chest") or name:find("seaking") or name:find("hydra") or name:find("sea king") then
+        if name:find("chest") or name:find("seaking") or name:find("hydra") then
             local targetPart = nil
             if obj:IsA("Model") then
-                targetPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Torso") or obj:FindFirstChildWhichIsA("BasePart")
+                targetPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
             elseif obj:IsA("BasePart") then
                 targetPart = obj
             end
@@ -106,19 +108,16 @@ local function FindAndCollectTarget()
             if targetPart then
                 foundTarget = true
                 StatusLabel.Text = "Thấy: " .. obj.Name
-                print("Đang bay tới mục tiêu: " .. obj.Name)
-                
                 TweenTo(targetPart.Position)
                 task.wait(1)
                 break
             end
         end
     end
-    
     return foundTarget
 end
 
--- Xử lý nút bấm Bật/Tắt
+-- Sự kiện bật/tắt nút
 ToggleButton.MouseButton1Click:Connect(function()
     _G.AutoHopRunning = not _G.AutoHopRunning
     if _G.AutoHopRunning then
@@ -137,7 +136,6 @@ task.spawn(function()
     while true do
         task.wait(2)
         if _G.AutoHopRunning then
-            StatusLabel.Text = "Đang quét..."
             local successFound = FindAndCollectTarget()
             if not successFound then
                 StatusLabel.Text = "Không thấy, đổi server..."
