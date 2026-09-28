@@ -1,1 +1,1 @@
-loadstring(game:HttpGet('https://raw.githubusercontent.com/NTT-HUB/Script/refs/heads/main/hft'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/NTT-HUB/Script/refs/heads/main/hft', true))()
