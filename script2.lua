@@ -1,4 +1,4 @@
--- Khởi tạo giao diện menu nâng cấp
+-- Khởi tạo giao diện menu tối ưu
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
@@ -57,8 +57,9 @@ local function TweenTo(targetPosition)
     local hrp = character.HumanoidRootPart
     
     local distance = (hrp.Position - targetPosition).Magnitude
-    local speed = 300 -- Tốc độ bay
+    local speed = 300
     local timeToTravel = distance / speed
+    if timeToTravel < 0.1 then timeToTravel = 0.1 end
     
     local tweenInfo = TweenInfo.new(timeToTravel, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPosition + Vector3.new(0, 5, 0))})
@@ -69,7 +70,7 @@ end
 
 -- Hàm đổi Server thông minh
 local function HopServer()
-    StatusLabel.Text = "Đang tìm server khác..."
+    StatusLabel.Text = "Đang đổi server..."
     local success, serverList = pcall(function()
         local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
         return HttpService:JSONDecode(game:HttpGet(url))
@@ -85,21 +86,27 @@ local function HopServer()
     end
 end
 
--- Hàm tìm kiếm Rương hoặc Boss Sea King / Hydra
+-- Hàm tìm kiếm rương hoặc boss
 local function FindAndCollectTarget()
     local foundTarget = false
     
     for _, obj in ipairs(workspace:GetDescendants()) do
-        if _G.AutoHopRunning == false then break end
+        if not _G.AutoHopRunning then break end
         
         local name = obj.Name:lower()
-        if name:find("chest") or name:find("seaking") or name:find("hydra") then
-            local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")) or (obj:IsA("BasePart") and obj)
+        -- Mở rộng từ khóa tìm kiếm (chest, rương, seaking, hydra)
+        if name:find("chest") or name:find("seaking") or name:find("hydra") or name:find("sea king") then
+            local targetPart = nil
+            if obj:IsA("Model") then
+                targetPart = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Torso") or obj:FindFirstChildWhichIsA("BasePart")
+            elseif obj:IsA("BasePart") then
+                targetPart = obj
+            end
             
             if targetPart then
                 foundTarget = true
-                StatusLabel.Text = "Đã thấy: " + obj.Name
-                print("Đang dịch chuyển tới mục tiêu: " .. obj.Name)
+                StatusLabel.Text = "Thấy: " .. obj.Name
+                print("Đang bay tới mục tiêu: " .. obj.Name)
                 
                 TweenTo(targetPart.Position)
                 task.wait(1)
@@ -130,13 +137,15 @@ task.spawn(function()
     while true do
         task.wait(2)
         if _G.AutoHopRunning then
+            StatusLabel.Text = "Đang quét..."
             local successFound = FindAndCollectTarget()
             if not successFound then
-                StatusLabel.Text = "Không thấy mục tiêu, đổi server..."
+                StatusLabel.Text = "Không thấy, đổi server..."
+                task.wait(1)
                 HopServer()
                 task.wait(10)
             else
-                task.wait(3)
+                task.wait(2)
             end
         end
     end
