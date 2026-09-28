@@ -1,4 +1,4 @@
--- Khởi tạo giao diện menu
+-- Khởi tạo giao diện menu nâng cấp
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
@@ -50,14 +50,14 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 
--- Hàm dịch chuyển mượt mà tới mục tiêu (Rương / Boss)
+-- Hàm dịch chuyển mượt mà tới mục tiêu
 local function TweenTo(targetPosition)
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = character.HumanoidRootPart
     
     local distance = (hrp.Position - targetPosition).Magnitude
-    local speed = 300 -- Tốc độ bay (studs/s)
+    local speed = 300 -- Tốc độ bay
     local timeToTravel = distance / speed
     
     local tweenInfo = TweenInfo.new(timeToTravel, Enum.EasingStyle.Linear)
@@ -85,7 +85,7 @@ local function HopServer()
     end
 end
 
--- Hàm kiểm tra và tìm Rương hoặc Boss Sea King / Hydra
+-- Hàm tìm kiếm Rương hoặc Boss Sea King / Hydra
 local function FindAndCollectTarget()
     local foundTarget = false
     
@@ -93,17 +93,14 @@ local function FindAndCollectTarget()
         if _G.AutoHopRunning == false then break end
         
         local name = obj.Name:lower()
-        -- Kiểm tra rương hoặc boss
         if name:find("chest") or name:find("seaking") or name:find("hydra") then
-            -- Nếu tìm thấy đối tượng có phần cơ thể/vị trí hợp lệ
             local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")) or (obj:IsA("BasePart") and obj)
             
             if targetPart then
                 foundTarget = true
-                StatusLabel.Text = "Đã thấy: " .. obj.Name
+                StatusLabel.Text = "Đã thấy: " + obj.Name
                 print("Đang dịch chuyển tới mục tiêu: " .. obj.Name)
                 
-                -- Bay tới vị trí mục tiêu
                 TweenTo(targetPart.Position)
                 task.wait(1)
                 break
@@ -128,17 +125,16 @@ ToggleButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Vòng lặp chính xử lý tính năng
+-- Vòng lặp chạy ngầm
 task.spawn(function()
     while true do
         task.wait(2)
         if _G.AutoHopRunning then
             local successFound = FindAndCollectTarget()
             if not successFound then
-                -- Nếu không tìm thấy rương hay boss trong server này -> Đổi server ngay
                 StatusLabel.Text = "Không thấy mục tiêu, đổi server..."
                 HopServer()
-                task.wait(10) -- Chờ thời gian load đổi server
+                task.wait(10)
             else
                 task.wait(3)
             end
